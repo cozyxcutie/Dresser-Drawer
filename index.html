@@ -107,6 +107,44 @@
             background: linear-gradient(135deg, #f472b6, #ec4899);
             box-shadow: 0 2px 4px rgba(236,72,153,0.3);
         }
+
+/* Style B: Horizontal Scrollable Layout */
+.drawer-content {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+  padding: 10px;
+  overflow-x: auto; /* Adds horizontal scrolling if items spill over */
+  overflow-y: hidden;
+  white-space: nowrap;
+}
+
+/* Individual Clothing Item Box */
+.item {
+  width: 60px;
+  height: 60px;
+  background-color: #fff;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  flex-shrink: 0; /* Prevents items from shrinking when packed */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.item:hover {
+  transform: scale(1.05);
+  border-color: #333;
+}
+
+.item img {
+  max-width: 80%;
+  max-height: 80%;
+}
+
     </style>
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col justify-between items-center p-4 transition-colors duration-500 selection:bg-indigo-500 selection:text-white">
@@ -420,26 +458,6 @@
     </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
