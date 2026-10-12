@@ -1,7 +1,422 @@
 <!DOCTYPE html>
-<html>
-  <body>
-    <h1>Hello, World!</h1>
-    <p>My first page hosted on GitHub Pages.</p>
-  </body>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Dresser Drawer</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            perspective: 1000px;
+        }
+
+        /* 3D Container & Perspective */
+        .dresser-perspective {
+            perspective: 1200px;
+            transform-style: preserve-3d;
+        }
+
+        .drawer-container {
+            transform-style: preserve-3d;
+            position: relative;
+        }
+
+        /* Drawer Sliding Animation */
+        .drawer-slide {
+            transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.5s ease;
+            transform-style: preserve-3d;
+        }
+
+        /* Front Face Depth Shadow */
+        .drawer-open {
+            transform: translateZ(90px) translateY(12px);
+            box-shadow: 0 25px 35px -10px rgba(0, 0, 0, 0.35), 0 10px 10px -5px rgba(0, 0, 0, 0.1);
+        }
+
+        .drawer-closed {
+            transform: translateZ(0px) translateY(0px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        /* Interior Depth Effect */
+        .drawer-interior {
+            background: repeating-linear-gradient(
+                90deg,
+                rgba(0,0,0,0.03),
+                rgba(0,0,0,0.03) 15px,
+                rgba(0,0,0,0.06) 15px,
+                rgba(0,0,0,0.06) 30px
+            );
+            box-shadow: inset 0 10px 20px rgba(0,0,0,0.25), inset 0 -2px 5px rgba(0,0,0,0.1);
+        }
+
+        /* Custom Scrollbar for Drawer Interior */
+        .custom-scroll::-webkit-scrollbar {
+            height: 4px;
+        }
+        .custom-scroll::-webkit-scrollbar-thumb {
+            background: rgba(0,0,0,0.2);
+            border-radius: 4px;
+        }
+
+        /* Styles Themes */
+        /* Modern Wood */
+        .theme-wood .dresser-frame {
+            background: #8B5A2B;
+            border-color: #6B4226;
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.3), 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+        }
+        .theme-wood .drawer-face {
+            background: linear-gradient(180deg, #A0522D 0%, #8B4513 100%);
+            border: 1px solid #6E360E;
+        }
+        .theme-wood .drawer-handle {
+            background: linear-gradient(135deg, #d4af37, #aa8c2c);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+
+        /* Sleek Dark */
+        .theme-dark .dresser-frame {
+            background: #1f2937;
+            border-color: #111827;
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.5), 0 20px 25px -5px rgba(0, 0, 0, 0.4);
+        }
+        .theme-dark .drawer-face {
+            background: linear-gradient(180deg, #374151 0%, #1f2937 100%);
+            border: 1px solid #111827;
+        }
+        .theme-dark .drawer-handle {
+            background: linear-gradient(135deg, #9ca3af, #4b5563);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.4);
+        }
+
+        /* Minimal White / Pastel */
+        .theme-white .dresser-frame {
+            background: #f3f4f6;
+            border-color: #e5e7eb;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.05), 0 20px 25px -5px rgba(0, 0, 0, 0.08);
+        }
+        .theme-white .drawer-face {
+            background: linear-gradient(180deg, #ffffff 0%, #f9fafb 100%);
+            border: 1px solid #e5e7eb;
+        }
+        .theme-white .drawer-handle {
+            background: linear-gradient(135deg, #f472b6, #ec4899);
+            box-shadow: 0 2px 4px rgba(236,72,153,0.3);
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col justify-between items-center p-4 transition-colors duration-500 selection:bg-indigo-500 selection:text-white">
+
+    <!-- Top Header -->
+    <header class="w-full max-w-2xl text-center my-4">
+        <h1 class="text-3xl sm:text-4xl font-bold tracking-tight text-white mb-2">Interactive Dresser</h1>
+        <p class="text-sm text-slate-400">Click any drawer or handle to open and close. Ready for items & clothes.</p>
+    </header>
+
+    <!-- Center Main View -->
+    <main class="w-full max-w-xl flex flex-col items-center justify-center my-auto py-6">
+        
+        <!-- Dresser Visual Framework -->
+        <div id="dresser" class="theme-wood dresser-perspective w-full max-w-md transition-all duration-300">
+            
+            <!-- Outer Wooden/Sleek Frame -->
+            <div class="dresser-frame rounded-2xl p-4 md:p-6 border-4 relative">
+                
+                <!-- Dresser Top Surface Shadow/Highlight -->
+                <div class="h-2 w-full bg-black/10 rounded-t-md mb-3"></div>
+
+                <!-- Drawers Stack Container -->
+                <div class="space-y-4">
+                    
+                    <!-- DRAWER 1 (TOP) -->
+                    <div class="drawer-container relative">
+                        <!-- Interior Cavity (Revealed when open) -->
+                        <div class="drawer-interior absolute inset-0 rounded-xl flex items-center justify-center border border-black/20 overflow-hidden">
+                            <div class="text-center p-3 opacity-60 pointer-events-none select-none">
+                                <span class="text-xs font-mono uppercase tracking-widest text-slate-400 block mb-1">Top Drawer Interior</span>
+                                <span class="text-xs text-slate-500 border border-dashed border-slate-500/40 rounded px-2 py-1 inline-block">
+                                    [ Clothing / Items placeholder ]
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Front Slideable Face -->
+                        <div id="drawer-0" onclick="toggleDrawer(0)" class="drawer-slide drawer-closed drawer-face rounded-xl p-6 cursor-pointer flex flex-col items-center justify-center relative z-10 select-none group">
+                            <!-- Status Badge -->
+                            <div class="absolute top-2 right-3">
+                                <span id="badge-0" class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-black/20 text-slate-300 transition-colors">Closed</span>
+                            </div>
+                            <!-- Label -->
+                            <span class="text-xs font-medium uppercase tracking-wider text-slate-400/80 mb-2 group-hover:text-slate-200 transition-colors">Top Drawer</span>
+                            <!-- Knob / Handle -->
+                            <div class="drawer-handle w-20 h-4 rounded-full transition-transform group-hover:scale-105 active:scale-95"></div>
+                        </div>
+                    </div>
+
+                    <!-- DRAWER 2 (MIDDLE) -->
+                    <div class="drawer-container relative">
+                        <!-- Interior Cavity -->
+                        <div class="drawer-interior absolute inset-0 rounded-xl flex items-center justify-center border border-black/20 overflow-hidden">
+                            <div class="text-center p-3 opacity-60 pointer-events-none select-none">
+                                <span class="text-xs font-mono uppercase tracking-widest text-slate-400 block mb-1">Middle Drawer Interior</span>
+                                <span class="text-xs text-slate-500 border border-dashed border-slate-500/40 rounded px-2 py-1 inline-block">
+                                    [ Clothing / Items placeholder ]
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Front Slideable Face -->
+                        <div id="drawer-1" onclick="toggleDrawer(1)" class="drawer-slide drawer-closed drawer-face rounded-xl p-6 cursor-pointer flex flex-col items-center justify-center relative z-10 select-none group">
+                            <!-- Status Badge -->
+                            <div class="absolute top-2 right-3">
+                                <span id="badge-1" class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-black/20 text-slate-300 transition-colors">Closed</span>
+                            </div>
+                            <!-- Label -->
+                            <span class="text-xs font-medium uppercase tracking-wider text-slate-400/80 mb-2 group-hover:text-slate-200 transition-colors">Middle Drawer</span>
+                            <!-- Knob / Handle -->
+                            <div class="drawer-handle w-20 h-4 rounded-full transition-transform group-hover:scale-105 active:scale-95"></div>
+                        </div>
+                    </div>
+
+                    <!-- DRAWER 3 (BOTTOM) -->
+                    <div class="drawer-container relative">
+                        <!-- Interior Cavity -->
+                        <div class="drawer-interior absolute inset-0 rounded-xl flex items-center justify-center border border-black/20 overflow-hidden">
+                            <div class="text-center p-3 opacity-60 pointer-events-none select-none">
+                                <span class="text-xs font-mono uppercase tracking-widest text-slate-400 block mb-1">Bottom Drawer Interior</span>
+                                <span class="text-xs text-slate-500 border border-dashed border-slate-500/40 rounded px-2 py-1 inline-block">
+                                    [ Clothing / Items placeholder ]
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Front Slideable Face -->
+                        <div id="drawer-2" onclick="toggleDrawer(2)" class="drawer-slide drawer-closed drawer-face rounded-xl p-6 cursor-pointer flex flex-col items-center justify-center relative z-10 select-none group">
+                            <!-- Status Badge -->
+                            <div class="absolute top-2 right-3">
+                                <span id="badge-2" class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-black/20 text-slate-300 transition-colors">Closed</span>
+                            </div>
+                            <!-- Label -->
+                            <span class="text-xs font-medium uppercase tracking-wider text-slate-400/80 mb-2 group-hover:text-slate-200 transition-colors">Bottom Drawer</span>
+                            <!-- Knob / Handle -->
+                            <div class="drawer-handle w-20 h-4 rounded-full transition-transform group-hover:scale-105 active:scale-95"></div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Dresser Base Feet -->
+                <div class="flex justify-between px-6 mt-3">
+                    <div class="w-6 h-3 bg-black/40 rounded-b-md"></div>
+                    <div class="w-6 h-3 bg-black/40 rounded-b-md"></div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Bottom Interactive Control Panel -->
+    <footer class="w-full max-w-xl bg-slate-800/80 backdrop-blur-md p-4 rounded-2xl border border-slate-700/60 shadow-xl my-4">
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+            
+            <!-- Global Action Buttons -->
+            <div class="flex items-center gap-2 w-full sm:w-auto">
+                <button onclick="openAllDrawers()" class="flex-1 sm:flex-none px-4 py-2 text-xs font-medium bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg transition-all active:scale-95 shadow-md hover:shadow-emerald-900/30">
+                    Open All
+                </button>
+                <button onclick="closeAllDrawers()" class="flex-1 sm:flex-none px-4 py-2 text-xs font-medium bg-rose-600 hover:bg-rose-500 text-white rounded-lg transition-all active:scale-95 shadow-md hover:shadow-rose-900/30">
+                    Close All
+                </button>
+            </div>
+
+            <!-- Theme Style Switcher -->
+            <div class="flex items-center gap-1 bg-slate-900/70 p-1 rounded-xl border border-slate-700/50 w-full sm:w-auto justify-center">
+                <button onclick="setTheme('wood')" id="btn-theme-wood" class="px-3 py-1.5 text-xs font-medium rounded-lg transition-all text-amber-200 bg-amber-900/40 border border-amber-700/50">
+                    Wood
+                </button>
+                <button onclick="setTheme('dark')" id="btn-theme-dark" class="px-3 py-1.5 text-xs font-medium text-slate-400 hover:text-slate-200 rounded-lg transition-all">
+                    Dark
+                </button>
+                <button onclick="setTheme('white')" id="btn-theme-white" class="px-3 py-1.5 text-xs font-medium text-slate-400 hover:text-slate-200 rounded-lg transition-all">
+                    Minimal
+                </button>
+            </div>
+
+            <!-- Audio FX Toggle -->
+            <button onclick="toggleAudio()" id="audio-toggle" class="flex items-center justify-center gap-2 px-3 py-2 text-xs font-medium bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-lg transition-all w-full sm:w-auto">
+                <svg id="audio-icon" class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path>
+                </svg>
+                <span id="audio-label">Sound ON</span>
+            </button>
+
+        </div>
+    </footer>
+
+    <script>
+        // Drawer State Management
+        const drawerStates = [false, false, false]; // [Top, Middle, Bottom] -> false = closed, true = open
+        let soundEnabled = true;
+
+        // Web Audio API Sound Synthesizer
+        let audioCtx = null;
+
+        function initAudio() {
+            if (!audioCtx) {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (AudioContext) {
+                    audioCtx = new AudioContext();
+                }
+            }
+        }
+
+        // Synthesize smooth sliding wood sound effect
+        function playSlideSound(isOpen) {
+            if (!soundEnabled) return;
+            try {
+                initAudio();
+                if (!audioCtx) return;
+
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+
+                // Buffer size for noise generation
+                const bufferSize = audioCtx.sampleRate * 0.25; // 250ms duration
+                const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+                const data = buffer.getChannelData(0);
+
+                // Fill with subtle noise
+                for (let i = 0; i < bufferSize; i++) {
+                    data[i] = Math.random() * 2 - 1;
+                }
+
+                const noise = audioCtx.createBufferSource();
+                noise.buffer = buffer;
+
+                // Low-pass filter for wood friction effect
+                const filter = audioCtx.createBiquadFilter();
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(isOpen ? 300 : 450, audioCtx.currentTime);
+                filter.frequency.exponentialRampToValueAtTime(isOpen ? 600 : 200, audioCtx.currentTime + 0.2);
+
+                // Gain Envelope for smooth slide feel
+                const gain = audioCtx.createGain();
+                gain.gain.setValueAtTime(0.01, audioCtx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.15, audioCtx.currentTime + 0.08);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.24);
+
+                noise.connect(filter);
+                filter.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                noise.start();
+            } catch (e) {
+                console.log('Audio playback restricted or not supported.', e);
+            }
+        }
+
+        // Toggle Single Drawer
+        function toggleDrawer(index) {
+            drawerStates[index] = !drawerStates[index];
+            updateDrawerUI(index);
+            playSlideSound(drawerStates[index]);
+        }
+
+        // Open All Drawers
+        function openAllDrawers() {
+            let changed = false;
+            drawerStates.forEach((state, index) => {
+                if (!state) {
+                    drawerStates[index] = true;
+                    updateDrawerUI(index);
+                    changed = true;
+                }
+            });
+            if (changed) playSlideSound(true);
+        }
+
+        // Close All Drawers
+        function closeAllDrawers() {
+            let changed = false;
+            drawerStates.forEach((state, index) => {
+                if (state) {
+                    drawerStates[index] = false;
+                    updateDrawerUI(index);
+                    changed = true;
+                }
+            });
+            if (changed) playSlideSound(false);
+        }
+
+        // Update CSS Classes and Badges
+        function updateDrawerUI(index) {
+            const drawerEl = document.getElementById(`drawer-${index}`);
+            const badgeEl = document.getElementById(`badge-${index}`);
+            const isOpen = drawerStates[index];
+
+            if (isOpen) {
+                drawerEl.classList.remove('drawer-closed');
+                drawerEl.classList.add('drawer-open');
+                
+                badgeEl.textContent = 'Open';
+                badgeEl.classList.remove('bg-black/20', 'text-slate-300');
+                badgeEl.classList.add('bg-emerald-500/30', 'text-emerald-300', 'border', 'border-emerald-500/40');
+            } else {
+                drawerEl.classList.remove('drawer-open');
+                drawerEl.classList.add('drawer-closed');
+
+                badgeEl.textContent = 'Closed';
+                badgeEl.classList.remove('bg-emerald-500/30', 'text-emerald-300', 'border', 'border-emerald-500/40');
+                badgeEl.classList.add('bg-black/20', 'text-slate-300');
+            }
+        }
+
+        // Theme Switcher Logic
+        function setTheme(theme) {
+            const dresser = document.getElementById('dresser');
+            const btnWood = document.getElementById('btn-theme-wood');
+            const btnDark = document.getElementById('btn-theme-dark');
+            const btnWhite = document.getElementById('btn-theme-white');
+
+            // Reset classes
+            dresser.classList.remove('theme-wood', 'theme-dark', 'theme-white');
+            [btnWood, btnDark, btnWhite].forEach(btn => {
+                btn.className = "px-3 py-1.5 text-xs font-medium text-slate-400 hover:text-slate-200 rounded-lg transition-all";
+            });
+
+            // Apply selected theme
+            if (theme === 'wood') {
+                dresser.classList.add('theme-wood');
+                btnWood.className = "px-3 py-1.5 text-xs font-medium rounded-lg transition-all text-amber-200 bg-amber-900/40 border border-amber-700/50";
+            } else if (theme === 'dark') {
+                dresser.classList.add('theme-dark');
+                btnDark.className = "px-3 py-1.5 text-xs font-medium rounded-lg transition-all text-slate-100 bg-slate-700 border border-slate-600";
+            } else if (theme === 'white') {
+                dresser.classList.add('theme-white');
+                btnWhite.className = "px-3 py-1.5 text-xs font-medium rounded-lg transition-all text-pink-300 bg-pink-950/40 border border-pink-700/50";
+            }
+        }
+
+        // Toggle Audio State
+        function toggleAudio() {
+            soundEnabled = !soundEnabled;
+            const label = document.getElementById('audio-label');
+            const icon = document.getElementById('audio-icon');
+
+            if (soundEnabled) {
+                label.textContent = "Sound ON";
+                icon.classList.remove('text-slate-500');
+                icon.classList.add('text-emerald-400');
+            } else {
+                label.textContent = "Sound OFF";
+                icon.classList.remove('text-emerald-400');
+                icon.classList.add('text-slate-500');
+            }
+        }
+    </script>
+</body>
 </html>
